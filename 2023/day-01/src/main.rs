@@ -22,7 +22,7 @@ const NUMBERS: [Word; 9] = [
 fn main() {
     let input: &str = include_str!("./input.txt");
     let result: i32 = input
-        .split("\n")
+        .split('\n')
         .map(|line| get_digits_part_1(line).unwrap())
         .map(|line| line.parse::<i32>().unwrap())
         .sum();
@@ -31,11 +31,11 @@ fn main() {
     // Part 2
     let mut trie = setup_trie();
     let result_2: i32 = input
-        .split("\n")
+        .split('\n')
         .map(|line| get_digits_part_2(line, &mut trie).unwrap())
         .map(|line| line.parse::<i32>().unwrap())
         .sum();
-    println!("Part 2 Result: {}", result_2);
+    println!("Part 2 result: {}", result_2);
 }
 
 fn get_digits_part_1(input: &str) -> Result<String, Error> {
@@ -61,7 +61,7 @@ fn get_digits_part_1(input: &str) -> Result<String, Error> {
 fn setup_trie() -> Trie {
     let mut trie = Trie::default();
     for num in NUMBERS.iter() {
-        trie.insert(&num.n, num.v);
+        trie.insert(num.n, num.v);
     }
     trie
 }
@@ -72,7 +72,7 @@ fn get_digits_part_2(input: &str, trie: &mut Trie) -> Result<String, Error> {
         let s = &input[index..];
         let (contains, c) = trie.contains(s);
         if contains {
-            if ans.len() == 0 {
+            if ans.is_empty() {
                 ans.push(c);
                 ans.push(c);
             } else {
