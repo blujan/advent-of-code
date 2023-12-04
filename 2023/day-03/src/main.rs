@@ -1,6 +1,6 @@
 use anyhow::Result;
 use phf::{phf_set, Set};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::fmt::Error;
 
 // Standard ascii symbols in PSF (perfect hash function) static set
@@ -62,21 +62,22 @@ fn main() {
     println!("Part 2 result: {}", process_input_part_2(input).unwrap());
 }
 
-fn get_sym_locations(input: &str, sym_locations: &mut HashSet<(i32, i32)>) {
-    for (num, line) in input.lines().enumerate() {
-        for (index, c) in line.chars().enumerate() {
-            if is_symbol(c) {
-                sym_locations.insert((index.try_into().unwrap(), num.try_into().unwrap()));
-            }
-        }
-    }
+fn get_sym_locations(input: &str, sym_locations: &mut HashMap<(i32, i32), char>) {
+    input.lines().enumerate().for_each(|(num, line)| {
+        line.chars()
+            .enumerate()
+            .filter(|(_, c)| is_symbol(*c))
+            .for_each(|(index, c)| {
+                sym_locations.insert((index.try_into().unwrap(), num.try_into().unwrap()), c);
+            })
+    });
 }
 
-fn is_connected(x: i32, y: i32, sym_locations: &mut HashSet<(i32, i32)>) -> bool {
+fn is_connected(x: i32, y: i32, sym_locations: &mut HashMap<(i32, i32), char>) -> bool {
     for direction in MOVES.iter() {
         let next_x = x + direction[0];
         let next_y = y + direction[1];
-        if sym_locations.contains(&(next_x, next_y)) {
+        if sym_locations.contains_key(&(next_x, next_y)) {
             return true;
         }
     }
@@ -86,7 +87,7 @@ fn is_connected(x: i32, y: i32, sym_locations: &mut HashSet<(i32, i32)>) -> bool
 fn get_unconnected_nums(
     num: usize,
     line: &str,
-    sym_locations: &mut HashSet<(i32, i32)>,
+    sym_locations: &mut HashMap<(i32, i32), char>,
 ) -> Result<u32, Error> {
     let mut result: u32 = 0;
     let mut found_num: u32 = 0;
@@ -114,7 +115,7 @@ fn get_unconnected_nums(
 }
 
 fn process_input_part_1(input: &str) -> Result<u32, Error> {
-    let mut sym_locations: HashSet<(i32, i32)> = HashSet::new();
+    let mut sym_locations: HashMap<(i32, i32), char> = HashMap::new();
     get_sym_locations(input, &mut sym_locations);
     let count = input
         .lines()
@@ -125,16 +126,17 @@ fn process_input_part_1(input: &str) -> Result<u32, Error> {
 }
 
 fn get_gear_points(input: &str, gear_points: &mut HashMap<(i32, i32), Vec<u32>>) {
-    for (num, line) in input.lines().enumerate() {
-        for (index, c) in line.chars().enumerate() {
-            if c == '*' {
+    input.lines().enumerate().for_each(|(num, line)| {
+        line.chars()
+            .enumerate()
+            .filter(|(_, c)| *c == '*')
+            .for_each(|(index, _)| {
                 gear_points.insert(
                     (index.try_into().unwrap(), num.try_into().unwrap()),
                     Vec::<u32>::new(),
                 );
-            }
-        }
-    }
+            })
+    });
 }
 
 fn is_geared(x: i32, y: i32, gear_points: &mut HashMap<(i32, i32), Vec<u32>>) -> (bool, i32, i32) {
@@ -181,9 +183,9 @@ fn connect_nums_to_gears(num: usize, line: &str, gear_points: &mut HashMap<(i32,
 fn process_input_part_2(input: &str) -> Result<u32, Error> {
     let mut gear_points: HashMap<(i32, i32), Vec<u32>> = HashMap::new();
     get_gear_points(input, &mut gear_points);
-    for (num, line) in input.lines().enumerate() {
+    input.lines().enumerate().for_each(|(num, line)| {
         connect_nums_to_gears(num, line, &mut gear_points);
-    }
+    });
     let count: u32 = gear_points
         .iter()
         .filter(|(_, nums)| nums.len() == 2)

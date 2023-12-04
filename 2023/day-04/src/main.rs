@@ -1,24 +1,29 @@
 use anyhow::Result;
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::{collections::HashSet, fmt::Error};
 
+lazy_static! {
+    static ref NUMBER_MATCH: Regex = Regex::new(r"(\d+)").unwrap();
+}
+
 fn main() {
     let input: &str = include_str!("./input.txt");
-    println!("Part 1 result: {}", process_part_1(input).unwrap());
-    println!("Part 2 result: {}", process_part_2(input).unwrap());
+    println!("\n🎄🎄🎄🎄🎄 Advent of Code ||| Day 04 🎄🎄🎄🎄🎄\n");
+    println!("Part 1 result\n\t{}\n", process_part_1(input).unwrap());
+    println!("Part 2 result\n\t{}", process_part_2(input).unwrap());
 }
 
 fn get_matches(input: &str) -> Result<i32, Error> {
-    let number_match = Regex::new(r"(\d+)").unwrap();
     let numbers = input.split(':').nth(1).unwrap();
     let (plays, win_nums) = numbers.split_once('|').unwrap();
     let mut winning_numbers: HashSet<i32> = HashSet::new();
-    for capture in number_match.captures_iter(win_nums) {
+    for capture in NUMBER_MATCH.captures_iter(win_nums) {
         let number = capture[1].parse::<i32>().unwrap();
         winning_numbers.insert(number);
     }
     let mut wins = 0;
-    for capture in number_match.captures_iter(plays) {
+    for capture in NUMBER_MATCH.captures_iter(plays) {
         let number = capture[1].parse::<i32>().unwrap();
         if winning_numbers.contains(&number) {
             wins += 1;
