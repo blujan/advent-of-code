@@ -25,7 +25,7 @@ fn main() {
         AOC_DAY
     );
     println!("Part 1 result\n\t{}\n", process_part_1(input).unwrap());
-    //println!("Part 2 result\n\t{}", process_part_2(input).unwrap());
+    println!("Part 2 result\n\t{}", process_part_2(input).unwrap());
 }
 
 fn get_seed_numbers(input: &str) -> Result<Vec<i64>, AoCError> {
@@ -58,7 +58,7 @@ fn get_maps(input: &str) -> Result<Vec<Vec<(i64, i64, i64)>>, AoCError> {
             };
             let dest = capture[1].parse::<i64>().unwrap();
             let source = capture[2].parse::<i64>().unwrap();
-            let range = capture[3].parse::<i64>().unwrap();
+            let range = capture[3].parse::<i64>().unwrap() - 1;
             let diff = dest - source;
             maps.last_mut()
                 .unwrap()
@@ -72,11 +72,11 @@ fn get_maps(input: &str) -> Result<Vec<Vec<(i64, i64, i64)>>, AoCError> {
 
 /*
 fn flatten_map(maps: &[Vec<(i64, i64, i64)>]) -> Vec<(i64, i64, i64)> {
-     
 }
 */
 
 fn get_land_from_seed(seed: i64, maps: &[Vec<(i64, i64, i64)>]) -> Option<i64> {
+    //println!("\n\n Entering get_land_from seed with seed = {}", seed);
     let mut curr = seed;
     for map in maps.iter() {
         let mut left = 0;
@@ -98,7 +98,6 @@ fn get_land_from_seed(seed: i64, maps: &[Vec<(i64, i64, i64)>]) -> Option<i64> {
                 left = mid;
             }
         }
-        //println!("{}", left);
         if curr >= map[left].1 && curr <= map[left].0 {
             curr += map[left].2;
         }
@@ -124,15 +123,20 @@ fn process_part_1(input: &str) -> Result<i64, AoCError> {
 
 fn process_part_2(input: &str) -> Result<i64, AoCError> {
     let seeds = get_seed_numbers(input)?;
-    //println!("Seeds: {:?}", seeds);
     let maps = get_maps(input)?;
     let mut min_land = i64::MAX;
-    for seed in seeds.iter() {
-        let land = match get_land_from_seed(*seed, &maps) {
-            Some(x) => x,
-            None => return Err(AoCError::Unknown),
-        };
-        min_land = min_land.min(land);
+    for seed_range in seeds.chunks(2) {
+        // @TODO Dealing with ranges might be tedious, but this is the very definition of brute force
+        // Thankfully, Rust release builds are quite fast
+        let base = seed_range[0];
+        let end = base + seed_range[1];
+        for i in base..end {
+            let land = match get_land_from_seed(i, &maps) {
+                Some(x) => x,
+                None => return Err(AoCError::Unknown),
+            };
+            min_land = min_land.min(land);
+        }
     }
 
     Ok(min_land)
