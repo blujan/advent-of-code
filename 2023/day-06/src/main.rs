@@ -83,7 +83,7 @@ fn get_races_kerning(input: &str) -> Result<Vec<Race<i64>>, AoCError> {
 }
 
 fn get_way_to_win(race: &Race<i64>) -> i64 {
-    // Standard form: -x^2 + T*x - R > 0
+    // Standard form: -x^2 + Time*x - Dist > 0
     // This is the number of integer points on the parabola > 0
     // Thanks to the answer from Hagen von Eitzen
     // https://math.stackexchange.com/questions/1867236/number-of-integers-between-two-real-numbers
