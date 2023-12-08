@@ -148,11 +148,11 @@ fn get_hand(input: &str) -> Result<(&str, i64), AoCError> {
     Ok((hand, multiplier))
 }
 
-fn process_part_1(input: &str) -> Result<i64, AoCError> {
+fn process(input: &str, calc: fn(&str, i64) -> Points) -> Result<i64, AoCError> {
     let points = input
         .lines()
         .map(|line| get_hand(line).unwrap())
-        .map(|(hand, mult)| calc_points_1(hand, mult))
+        .map(|(hand, mult)| calc(hand, mult))
         .sorted_unstable_by(|a, b| a.hand.cmp(&b.hand))
         .collect::<Vec<Points>>();
     let result = points
@@ -163,19 +163,12 @@ fn process_part_1(input: &str) -> Result<i64, AoCError> {
     Ok(result)
 }
 
+fn process_part_1(input: &str) -> Result<i64, AoCError> {
+    process(input, calc_points_1)
+}
+
 fn process_part_2(input: &str) -> Result<i64, AoCError> {
-    let points = input
-        .lines()
-        .map(|line| get_hand(line).unwrap())
-        .map(|(hand, mult)| calc_points_2(hand, mult))
-        .sorted_unstable_by(|a, b| a.hand.cmp(&b.hand))
-        .collect::<Vec<Points>>();
-    let result = points
-        .iter()
-        .enumerate()
-        .map(|(pos, points)| ((pos as i64) + 1) * points.mult)
-        .sum();
-    Ok(result)
+    process(input, calc_points_2)
 }
 
 #[cfg(test)]
