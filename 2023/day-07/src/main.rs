@@ -35,7 +35,7 @@ fn main() {
 }
 
 fn card_to_points_1(c: char) -> i32 {
-    let points = match c {
+    match c {
         '2' => 1,
         '3' => 2,
         '4' => 3,
@@ -50,12 +50,11 @@ fn card_to_points_1(c: char) -> i32 {
         'K' => 12,
         'A' => 13,
         _ => 0,
-    };
-    points
+    }
 }
 
 fn card_to_points_2(c: char) -> i32 {
-    let points = match c {
+    match c {
         'J' => 1,
         '2' => 2,
         '3' => 3,
@@ -70,14 +69,13 @@ fn card_to_points_2(c: char) -> i32 {
         'K' => 12,
         'A' => 13,
         _ => 0,
-    };
-    points
+    }
 }
 
-fn calc_points_1 (hand: &str, multiplier: i64) -> Points {
+fn calc_points_1(hand: &str, multiplier: i64) -> Points {
     let mut hand_score = hand
         .chars()
-        .map(|card| card_to_points_1(card))
+        .map(card_to_points_1)
         .rev()
         .enumerate()
         .map(|(pos, card)| card << (pos * 4))
@@ -96,31 +94,33 @@ fn calc_points_1 (hand: &str, multiplier: i64) -> Points {
         (2, Some(x)) => x << 20,
         _ => 0,
     };
-    Points{hand: hand_score, mult: multiplier}
+    Points {
+        hand: hand_score,
+        mult: multiplier,
+    }
 }
 
-fn calc_points_2 (hand: &str, multiplier: i64) -> Points {
+fn calc_points_2(hand: &str, multiplier: i64) -> Points {
     let mut hand_score = hand
         .chars()
-        .map(|card| card_to_points_2(card))
+        .map(card_to_points_2)
         .rev()
         .enumerate()
         .map(|(pos, card)| card << (pos * 4))
         .sum();
-    let mut initial_counts = hand
-        .chars()
-        .counts();
+    let mut initial_counts = hand.chars().counts();
     let num_jokers = match initial_counts.remove(&'J') {
         Some(x) => x as i32,
-        _=> 0,
+        _ => 0,
     };
-    let card_counts = initial_counts.into_values()
+    let card_counts = initial_counts
+        .into_values()
         .map(|num| num as i32)
         .sorted_unstable_by(|a, b| b.cmp(a))
         .collect::<Vec<i32>>();
-    let highest = match card_counts.get(0) {
+    let highest = match card_counts.first() {
         Some(x) => *x,
-        _=> 0,
+        _ => 0,
     };
     hand_score += match (highest + num_jokers, card_counts.get(1)) {
         (5, _) => 6 << 20,
@@ -129,16 +129,18 @@ fn calc_points_2 (hand: &str, multiplier: i64) -> Points {
         (2, Some(x)) => x << 20,
         _ => 0,
     };
-    Points{hand: hand_score, mult: multiplier}
+    Points {
+        hand: hand_score,
+        mult: multiplier,
+    }
 }
 
-
 fn get_hand(input: &str) -> Result<(&str, i64), AoCError> {
-    let (hand, mult) = match input.split(" ").collect_tuple() {
+    let (hand, mult) = match input.split(' ').collect_tuple() {
         Some(x) => x,
         _ => return Err(AoCError::ParsingError(input.to_string())),
     };
-    let capture = match NUMBER_MATCH.captures(&mult) {
+    let capture = match NUMBER_MATCH.captures(mult) {
         Some(x) => x,
         _ => return Err(AoCError::ParsingError(mult.to_string())),
     };
