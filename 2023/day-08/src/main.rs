@@ -34,35 +34,28 @@ fn node_to_int(node: &str) -> Option<i32> {
     Some(value)
 }
 
-fn get_moves(input: &str) -> Cycle<Chars<'_>> {
-    input.lines().next().unwrap().chars().cycle()
+fn get_moves(input: &str) -> Option<Cycle<Chars<'_>>> {
+    Some(input.lines().next()?.chars().cycle())
+}
+
+fn parse_line(line: &str) -> Option<(i32, i32, i32)> {
+    let (mut source, destinations) = line.split_once('=')?;
+    let (mut left, mut right) = destinations.split_once(',')?;
+    source = source.trim();
+    left = left.trim().trim_matches('(');
+    right = right.trim().trim_matches(')');
+    let source_num = node_to_int(source)?;
+    let left_num = node_to_int(left)?;
+    let right_num = node_to_int(right)?;
+    Some((source_num, left_num, right_num))
 }
 
 fn get_map(input: &str) -> Result<HashMap<i32, (i32, i32)>, AoCError> {
     let mut map: HashMap<i32, (i32, i32)> = HashMap::new();
     for line in input.lines().skip(2) {
-        let (mut source, destinations) = match line.split_once('=') {
+        let (source_num, left_num, right_num) = match parse_line(line) {
             Some(x) => x,
-            _ => return Err(AoCError::ParsingError(line.to_string())),
-        };
-        let (mut left, mut right) = match destinations.split_once(',') {
-            Some(x) => x,
-            _ => return Err(AoCError::ParsingError(line.to_string())),
-        };
-        left = left.trim().trim_matches('(');
-        right = right.trim().trim_matches(')');
-        source = source.trim();
-        let source_num = match node_to_int(source) {
-            Some(x) => x,
-            _ => return Err(AoCError::ParsingError(line.to_string())),
-        };
-        let left_num = match node_to_int(left) {
-            Some(x) => x,
-            _ => return Err(AoCError::ParsingError(line.to_string())),
-        };
-        let right_num = match node_to_int(right) {
-            Some(x) => x,
-            _ => return Err(AoCError::ParsingError(line.to_string())),
+             _ => return Err(AoCError::ParsingError(line.to_string())),
         };
         map.insert(source_num, (left_num, right_num));
     }
@@ -70,7 +63,10 @@ fn get_map(input: &str) -> Result<HashMap<i32, (i32, i32)>, AoCError> {
 }
 
 fn process_part_1(input: &str) -> Result<i64, AoCError> {
-    let mut moves = get_moves(input);
+    let mut moves = match get_moves(input) {
+        Some(x) => x,
+        _=> return Err(AoCError::ParsingError("Unable to parse first line".to_string())),
+    };
     let map = get_map(input)?;
     let mut result: i64 = 0;
     let mut current = node_to_int("AAA").unwrap();
@@ -84,7 +80,7 @@ fn process_part_1(input: &str) -> Result<i64, AoCError> {
         current = match direction {
             'L' => next.0,
             'R' => next.1,
-            _ => panic!(),
+            _ => panic!("Unknown direction: {}", direction),
         };
         result += 1;
     }
@@ -105,9 +101,6 @@ fn vec_lcm(nums: &[i64]) -> i64 {
     if nums.len() == 1 {
         return nums[0];
     }
-    if nums.len() == 2 {
-        return num::integer::lcm::<i64>(nums[0], nums[1]);
-    }
     num::integer::lcm::<i64>(nums[0], vec_lcm(&nums[1..]))
 }
 
@@ -115,17 +108,24 @@ fn process_part_2(input: &str) -> Result<i64, AoCError> {
     let map = get_map(input)?;
     let starting_positions = get_ends_with('A', &map);
     let mut result: Vec<i64> = Vec::new();
+    let moves_start = match get_moves(input) {
+        Some(x) => x,
+        _=> return Err(AoCError::ParsingError("Unable to parse first line".to_string())),
+    };
     for pos in starting_positions.iter() {
         let mut current = *pos;
         let mut count: i64 = 0;
-        let mut moves = get_moves(input);
+        let mut moves = moves_start.clone();
         while (current & 0xFF) != ('Z' as i32) {
             let direction = moves.next().unwrap();
-            let next = map.get(&current).unwrap();
+            let next = match map.get(&current) {
+                Some(x) => x,
+                _ => return Err(AoCError::Unknown),
+            };
             current = match direction {
                 'L' => next.0,
                 'R' => next.1,
-                _ => panic!(),
+                _ => panic!("Unknown direction: {}", direction),
             };
             count += 1;
         }
@@ -138,7 +138,7 @@ fn process_part_2(input: &str) -> Result<i64, AoCError> {
 mod tests {
     use super::*;
     #[test]
-    fn test_1() -> Result<()> {
+    fn par1_1() -> Result<()> {
         let input_1 = "RL
 
 AAA = (BBB, CCC)
@@ -159,7 +159,7 @@ ZZZ = (ZZZ, ZZZ)";
     }
 
     #[test]
-    fn test_2() -> Result<()> {
+    fn part_2() -> Result<()> {
         let input_2 = "LR
 
 11A = (11B, XXX)
