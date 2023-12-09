@@ -18,8 +18,14 @@ fn main() {
         "\n🎄🎄🎄🎄🎄 Advent of Code ||| Day {} 🎄🎄🎄🎄🎄\n",
         AOC_DAY
     );
-    println!("Part 1 result\n\t{}\n", process_part_1(input).unwrap());
-    println!("Part 2 result\n\t{}", process_part_2(input).unwrap());
+    match process_part_1(input) {
+        Ok(result) => println!("Part 1 result\n\t{}\n", result),
+        Err(e) => println!("Error: {}", e),
+    }
+    match process_part_2(input) {
+        Ok(result) => println!("Part 2 result\n\t{}", result),
+        Err(e) => println!("Error: {}", e),
+    }
 }
 
 fn node_to_int(node: &str) -> Option<i32> {
