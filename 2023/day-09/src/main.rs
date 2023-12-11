@@ -12,16 +12,16 @@ pub enum AoCError {
 }
 
 fn main() {
-    let input: &str = include_str!("./input.txt");
+    const INPUT: &str = include_str!("./input.txt");
     println!(
         "\n🎄🎄🎄🎄🎄 Advent of Code ||| Day {} 🎄🎄🎄🎄🎄\n",
         AOC_DAY
     );
-    match process_part_1(input) {
+    match process_part_1(INPUT) {
         Ok(result) => println!("Part 1 result\n\t{}\n", result),
         Err(e) => println!("Error: {}", e),
     }
-    match process_part_2(input) {
+    match process_part_2(INPUT) {
         Ok(result) => println!("Part 2 result\n\t{}", result),
         Err(e) => println!("Error: {}", e),
     }
@@ -30,7 +30,7 @@ fn main() {
 fn parse_line(input: &str) -> Result<Vec<i64>, AoCError> {
     let line = input.trim();
     let mut output: Vec<i64> = Vec::new();
-    for num_str in line.split(' ') {
+    for num_str in line.split_whitespace() {
         let number = match num_str.parse::<i64>() {
             Ok(x) => x,
             _ => return Err(AoCError::ParsingError(line.to_string())),
@@ -51,12 +51,13 @@ fn parse_input(input: &str) -> Result<Vec<Vec<i64>>, AoCError> {
 
 fn build_nums(numbers: &[i64]) -> Vec<Vec<i64>> {
     let mut triangle: Vec<Vec<i64>> = Vec::new();
-    let mut next: Vec<i64>;
-    let mut last = numbers.to_vec();
+    triangle.push(numbers.to_vec());
     let mut check: i64 = 1;
     while check != 0 {
         check = 0;
-        next = last
+        let next = triangle
+            .last()
+            .unwrap()
             .windows(2)
             .map(|nums| {
                 let num = nums[1] - nums[0];
@@ -64,10 +65,8 @@ fn build_nums(numbers: &[i64]) -> Vec<Vec<i64>> {
                 num
             })
             .collect();
-        //println!("{:?}", next);
         if check != 0 {
-            triangle.push(next.clone());
-            last = next;
+            triangle.push(next);
         }
     }
     triangle
@@ -78,8 +77,7 @@ fn extrapolate_forward(numbers: &[i64]) -> i64 {
     let value = triangle
         .iter()
         .map(|line| line.last().unwrap())
-        .sum::<i64>()
-        + numbers.last().unwrap();
+        .sum::<i64>();
     value
 }
 
@@ -90,7 +88,7 @@ fn extrapolate_back(numbers: &[i64]) -> i64 {
         let value = line.first().unwrap() - last;
         last = value;
     });
-    numbers[0] - last
+    last
 }
 
 fn process_part_1(input: &str) -> Result<i64, AoCError> {
