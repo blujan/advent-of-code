@@ -160,50 +160,51 @@ fn check_cols_mirrored_2(grid: &Grid, a: i32, b: i32) -> bool {
 }
 
 fn check_mirrored(grid: &Grid, check: fn(&Grid, i32, i32) -> bool, limit: i32) -> Option<i32> {
-    let mut top = 0;
-    let mut bot = 1;
-    while bot < limit {
-        if check(grid, top, bot) {
-            return Some(top + 1);
+    let mut index = 1;
+    while index < limit {
+        if check(grid, index - 1, index) {
+            return Some(index);
         }
-        top += 1;
-        bot += 1;
+        index += 1;
     }
     None
 }
 
 fn process_part_1(input: &str) -> Result<i32, AoCError> {
     let grids: Vec<Grid> = input.split("\n\n").map(|grid| Grid::new(grid)).collect();
-    let mut result = 0;
-    for grid in grids.iter() {
-        // let col_mirror = match check_cols(grid) {
-        let col_mirror = match check_mirrored(grid, check_cols_mirrored, grid.width as i32) {
-            Some(x) => x,
-            _ => 0,
-        };
-        let row_mirror = match check_mirrored(grid, check_rows_mirrored, grid.height as i32) {
-            Some(x) => x,
-            _ => 0,
-        };
-        result += col_mirror + (row_mirror * 100);
-    }
+    let result = grids
+        .iter()
+        .map(|grid| {
+            let col_mirror = match check_mirrored(grid, check_cols_mirrored, grid.width as i32) {
+                Some(x) => x,
+                _ => 0,
+            };
+            let row_mirror = match check_mirrored(grid, check_rows_mirrored, grid.height as i32) {
+                Some(x) => x,
+                _ => 0,
+            };
+            col_mirror + (row_mirror * 100)
+        })
+        .sum();
     Ok(result)
 }
 
 fn process_part_2(input: &str) -> Result<i32, AoCError> {
     let grids: Vec<Grid> = input.split("\n\n").map(|grid| Grid::new(grid)).collect();
-    let mut result = 0;
-    for grid in grids.iter() {
-        let col_mirror = match check_mirrored(grid, check_cols_mirrored_2, grid.width as i32) {
-            Some(x) => x,
-            _ => 0,
-        };
-        let row_mirror = match check_mirrored(grid, check_rows_mirrored_2, grid.height as i32) {
-            Some(x) => x,
-            _ => 0,
-        };
-        result += col_mirror + (row_mirror * 100);
-    }
+    let result = grids
+        .iter()
+        .map(|grid| {
+            let col_mirror = match check_mirrored(grid, check_cols_mirrored_2, grid.width as i32) {
+                Some(x) => x,
+                _ => 0,
+            };
+            let row_mirror = match check_mirrored(grid, check_rows_mirrored_2, grid.height as i32) {
+                Some(x) => x,
+                _ => 0,
+            };
+            col_mirror + (row_mirror * 100)
+        })
+        .sum();
     Ok(result)
 }
 
