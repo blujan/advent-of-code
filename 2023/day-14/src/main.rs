@@ -1,7 +1,12 @@
 use anyhow::Result;
-use thiserror::Error;
-//use fxhash::FxBuildHasher;
+use day_14::Direction;
+use day_14::Grid;
 use std::collections::HashMap;
+use thiserror::Error;
+
+extern crate pretty_env_logger;
+#[macro_use]
+extern crate log;
 
 const AOC_DAY: &str = "14";
 
@@ -13,52 +18,8 @@ pub enum AoCError {
     Unknown,
 }
 
-struct Grid {
-    data: Vec<u8>,
-    width: usize,
-    height: usize,
-}
-
-#[derive(Copy, Clone)]
-enum Direction {
-    North,
-    West,
-    South,
-    East,
-}
-
-impl Grid {
-    pub fn new(data: &str) -> Grid {
-        let height = data.lines().count();
-        let width = data.lines().next().unwrap().chars().count();
-        Grid {
-            data: data.as_bytes().to_vec(),
-            width,
-            height,
-        }
-    }
-
-    fn get_index(&self, x: usize, y: usize, dir: Direction) -> usize {
-        let (n_x, n_y) = match dir {
-            Direction::North => (x, y),
-            Direction::South => (self.width - x - 1, self.height - y - 1),
-            Direction::West => (y ,self.height - x - 1),
-            Direction::East => (self.width - y - 1, x),
-        };
-        (n_y * (self.width + 1)) + n_x
-    }
-
-    pub fn get(&self, x: usize, y: usize, dir: Direction) -> char {
-        let index = self.get_index(x, y, dir);
-        self.data[index] as char
-    }
-    pub fn set(&mut self, x: usize, y: usize, dir: Direction, value: char) {
-        let index = self.get_index(x, y, dir);
-        self.data[index] = value as u8;
-    }
-}
-
 fn main() {
+    pretty_env_logger::init();
     const INPUT: &str = include_str!("./input.txt");
     println!(
         "\n🎄🎄🎄🎄🎄 Advent of Code ||| Day {} 🎄🎄🎄🎄🎄\n",
@@ -101,7 +62,7 @@ fn process_part_1(input: &str) -> Result<i64, AoCError> {
     Ok(result)
 }
 
-fn tilt (grid: &mut Grid, dir: Direction) {
+fn tilt(grid: &mut Grid, dir: Direction) {
     let (y_size, x_size) = match dir {
         Direction::North | Direction::South => (grid.height, grid.width),
         Direction::East | Direction::West => (grid.width, grid.height),
@@ -128,13 +89,17 @@ fn spin(grid: &mut Grid) {
     tilt(grid, Direction::East);
 }
 
-fn get_cycle_size(grid: &mut Grid, spins: usize, state_cache: &mut HashMap<Vec<u8>, usize>) -> (usize, usize) {
+fn get_cycle_size(
+    grid: &mut Grid,
+    spins: usize,
+    state_cache: &mut HashMap<Vec<u8>, usize>,
+) -> (usize, usize) {
     let mut lead_up = 0;
     let mut cycle_size = 0;
     for spin_num in 0..spins {
         spin(grid);
         if let Some(&x) = state_cache.get(&grid.data) {
-            println!("At {}. State seen previously at iteration {}", spin_num, x);
+            info!("At {}. State seen previously at iteration {}", spin_num, x);
             cycle_size = spin_num - x;
             lead_up = x;
             break;
@@ -145,15 +110,9 @@ fn get_cycle_size(grid: &mut Grid, spins: usize, state_cache: &mut HashMap<Vec<u
 }
 
 fn get_score(grid: &Grid) -> i64 {
-    let mut count = 0;
-    for row in 0..grid.height {
-        for col in 0..grid.width {
-            if grid.get(col, row, Direction::North) == 'O' {
-                count += (grid.height - row) as i64;
-            }
-        }
-    }
-    count
+    grid.into_iter()
+        .filter(|(block, _, _)| *block == 'O')
+        .fold(0, |acc, (_, row, _)| acc + (grid.height - row) as i64)
 }
 
 fn process_part_2(input: &str, spins: usize) -> Result<i64, AoCError> {
@@ -167,17 +126,14 @@ fn process_part_2(input: &str, spins: usize) -> Result<i64, AoCError> {
     let target_cycle = (((spins - lead_up) % cycle_size) + lead_up) - 1;
     // println!("Cycle size: {}, lead up: {}", cycle_size, lead_up);
     // println!("Target cycle is: {}", target_cycle);
-    for (key, _) in state_cache.drain().filter(|(_, value)| *value == target_cycle) {
-        println!("Restoring from state cache..");
+    for (key, _) in state_cache
+        .drain()
+        .filter(|(_, value)| *value == target_cycle)
+    {
+        info!("Restoring from state cache..");
         grid.data = key;
     }
-    // for y in 0..grid.height {
-    //     for x in 0..grid.width {
-    //         print!("{}", grid.get(x, y, Direction::North));
-    //     }
-    //     println!();
-    // }
-    // println!();
+
     let score = get_score(&grid);
     Ok(score)
 }
@@ -202,8 +158,7 @@ O.#..O.#.#
     }
     #[test]
     fn part2() -> Result<()> {
-        let input_1 =
-"O....#....
+        let input_1 = "O....#....
 O.OO#....#
 .....##...
 OO.#O....O
