@@ -33,10 +33,7 @@ fn main() {
     }
 }
 
-fn parse_flow<'a>(
-    input: &'a str,
-    flow_map: &mut HashMap<&'a str, Vec<Condition>>,
-) -> Result<(), AoCError> {
+fn parse_flow(input: &str) -> Result<(&str, Vec<Condition>), AoCError> {
     let (key, conditions) = match input.split_once('{') {
         Some(x) => x,
         _ => return Err(AoCError::ParsingError(input.to_string())),
@@ -68,8 +65,7 @@ fn parse_flow<'a>(
         command_cond.push(condition);
     }
     trace!("{} -> {:?}", key, command_cond);
-    flow_map.insert(key, command_cond);
-    Ok(())
+    Ok((key, command_cond))
 }
 
 fn parse_parts(input: &str) -> Result<HashMap<char, i32>, AoCError> {
@@ -115,35 +111,43 @@ fn get_score(part: &HashMap<char, i32>, flow_map: &HashMap<&str, Vec<Condition>>
     0
 }
 
+fn get_flow_map(input: &str) -> Result<HashMap<&str, Vec<Condition>>, AoCError> {
+    let parsed_flows: Vec<_> = input
+        .lines()
+        .map(parse_flow)
+        .collect::<Result<Vec<_>, _>>()?;
+    let flow_map = HashMap::from_iter(parsed_flows);
+    Ok(flow_map)
+}
+
 fn process_part_1(input: &str) -> Result<i64, AoCError> {
     let (flows, parts) = match input.split_once("\n\n") {
         Some(x) => x,
         _ => return Err(AoCError::ParsingError("".to_string())),
     };
-    let mut flow_map: HashMap<&str, Vec<Condition>> = HashMap::new();
-    for flow in flows.lines() {
-        parse_flow(flow, &mut flow_map)?;
-    }
-    let part_map_result: Result<Vec<HashMap<char, i32>>, _> =
-        parts.lines().map(parse_parts).collect();
-    let part_map = part_map_result.unwrap();
+    let flow_map = get_flow_map(flows)?;
+    let part_map: Vec<_> = parts
+        .lines()
+        .map(parse_parts)
+        .collect::<Result<Vec<_>, _>>()?;
     trace!("{:?}", part_map);
     let result = part_map.iter().map(|part| get_score(part, &flow_map)).sum();
     Ok(result)
 }
 
 fn get_range_map() -> HashMap<char, (i32, i32)> {
-    let mut ranges: HashMap<char, (i32, i32)> = HashMap::new();
-    ranges.insert('x', (1, 4000));
-    ranges.insert('m', (1, 4000));
-    ranges.insert('a', (1, 4000));
-    ranges.insert('s', (1, 4000));
+    let ranges: HashMap<char, (i32, i32)> = HashMap::from([
+        ('x', (1, 4000)),
+        ('m', (1, 4000)),
+        ('a', (1, 4000)),
+        ('s', (1, 4000)),
+    ]);
     ranges
 }
 
 fn get_part_count(
     flow_map: &HashMap<&str, Vec<Condition>>,
-    part_ranges: &mut HashMap<char, (i32, i32)>,
+    part_ranges: &HashMap<char, (i32, i32)>,
     current: String,
 ) -> i64 {
     if current == "A" {
@@ -165,7 +169,7 @@ fn get_part_count(
     };
     for condition in conditions {
         if condition.operator == std::cmp::Ordering::Equal {
-            count += get_part_count(flow_map, &mut mod_part_ranges, condition.dest.to_string());
+            count += get_part_count(flow_map, &mod_part_ranges, condition.dest.to_string());
             continue;
         }
         let orig = mod_part_ranges.get(&condition.attr).unwrap();
@@ -177,7 +181,7 @@ fn get_part_count(
             _ => panic!(),
         };
         mod_part_ranges.insert(condition.attr, next_a);
-        count += get_part_count(flow_map, &mut mod_part_ranges, condition.dest.clone());
+        count += get_part_count(flow_map, &mod_part_ranges, condition.dest.to_string());
         mod_part_ranges.insert(condition.attr, next_b);
     }
     count
@@ -188,12 +192,9 @@ fn process_part_2(input: &str) -> Result<i64, AoCError> {
         Some(x) => x,
         _ => return Err(AoCError::ParsingError("".to_string())),
     };
-    let mut flow_map: HashMap<&str, Vec<Condition>> = HashMap::new();
-    for flow in flows.lines() {
-        parse_flow(flow, &mut flow_map)?;
-    }
-    let mut part_ranges = get_range_map();
-    let result = get_part_count(&flow_map, &mut part_ranges, "in".to_string());
+    let flow_map = get_flow_map(flows)?;
+    let part_ranges = get_range_map();
+    let result = get_part_count(&flow_map, &part_ranges, "in".to_string());
     Ok(result)
 }
 
