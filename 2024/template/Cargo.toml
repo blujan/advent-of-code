@@ -1,5 +1,5 @@
 [package]
-name = "day-{{project-name}}"
+name = "{{project-name}}"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow.workspace = true
 thiserror.workspace = true
-itertools.worksapce = true
+itertools.workspace = true
 pretty_env_logger.workspace = true
 log.workspace = true

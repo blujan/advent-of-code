@@ -7,3 +7,7 @@ members = ["day-*"]
 anyhow = "1.0"
 regex = "1.10.2"
 phf = {version = "0.11.2", features = ["macros"]}
+thiserror = "2.0.3"
+itertools = "0.13.0"
+pretty_env_logger = "0.5.0"
+log = "0.4.20"
