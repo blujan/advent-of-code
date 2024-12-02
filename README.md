@@ -2,9 +2,13 @@
 
 My solutions for [Advent of Code](https://adventofcode.com/).
 
+## 2024
+
+Second verse same as the first.
+
 ## 2023
 
-This is my first year doing Advent of Code, and I wanted to take the opporunity to get a bit more comfortable with Rust.
+This is my first year doing Advent of Code, and I wanted to take the opportunity to get a bit more comfortable with Rust.
 
 Thanks to:
 
